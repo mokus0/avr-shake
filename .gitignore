@@ -1,3 +1,7 @@
+.shake.database
+example/blink.elf
+example/blink.hex
+
 ##############
 # Global/OSX #
 ##############
