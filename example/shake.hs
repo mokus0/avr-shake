@@ -8,8 +8,8 @@ import Development.Shake.FilePath
 device  = "atmega2560"
 clock   = round 16e6
 
-avrdudeFlags    = ["-b", "115200", "-c", "stk500v2", "-p", device]
-usbPort         = "/dev/tty.usbmodem1411"
+avrdudeFlags    = ["-b", "115200", "-c", "dragon_isp", "-p", device]
+usbPort         = "usb"
 
 cFlags = ["-Wall", "-Os", 
     "-DF_CPU=" ++ show clock ++ "UL",

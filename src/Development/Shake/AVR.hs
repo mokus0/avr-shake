@@ -36,7 +36,7 @@ avr_objdump' objdump src out = do
     writeFileChanged out lss
 
 avrdude = avrdude' "avrdude"
-avrdude' avrdudeBin flags hex usbPort = do
+avrdude' avrdudeBin flags hex port = do
     alwaysRerun
-    need [usbPort, hex]
-    system' avrdudeBin (flags ++ ["-P", usbPort, "-Uflash:w:" ++ hex])
+    need [hex]
+    system' avrdudeBin (flags ++ ["-P", port, "-Uflash:w:" ++ hex])
