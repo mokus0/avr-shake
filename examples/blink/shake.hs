@@ -5,8 +5,8 @@ import Development.Shake
 import Development.Shake.AVR
 import Development.Shake.FilePath
 
-device  = "atmega2560"
-clock   = round 16e6
+device  = "attiny13"
+clock   = round 9.6e6
 
 avrdudeFlags    = ["-b", "115200", "-c", "dragon_isp", "-p", device]
 usbPort         = "usb"

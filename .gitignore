@@ -1,6 +1,7 @@
 .shake.database
-example/blink.elf
-example/blink.hex
+*.elf
+*.hex
+*.bin
 
 ##############
 # Global/OSX #
@@ -31,5 +32,28 @@ cabal-dev
 *.chi
 *.chs.h
 .virthualenv
+
+
+#####
+# C #
+#####
+
+# Object files
+*.o
+
+# Libraries
+*.lib
+*.a
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
 
 
