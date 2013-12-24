@@ -120,8 +120,8 @@ int main(void)
         uint8_t b = next_intensity(wind);
         
         // simple 4-step linear fade from a to b
-        uint8_t del     = (b - a) >> 2;
-        uint8_t del2    = (b - a) >> 1;
+        uint8_t del     = (int8_t) (b - a) >> 2;
+        uint8_t del2    = (int8_t) (b - a) >> 1;
         
         OCR0A = a + del;
         _delay_ms(DT/4);
