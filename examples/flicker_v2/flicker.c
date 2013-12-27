@@ -129,13 +129,41 @@ static int16_t /* 15:13 */ flicker_filter(int16_t /* 7:5 */ x) {
 
 #else
 
-// another scipy-designed filter with 4Hz cutoff
-// and 100Hz sample rate.
+// scipy-designed filter with 4Hz cutoff and 100Hz sample rate.
+// parameters set using the following little snippet:
+// >>> rate=100
+// >>> cutoff = 4/(rate/2.)
+// >>> b, a = signal.butter(2, cutoff/2, 'low', analog=False)
 //
+// which yields:
+//
+//  b = 0.00362168,  0.00724336,  0.00362168
+//  a = 1.        , -1.82269493,  0.83718165
+//
+// B was then rescaled to 1, 2, 1 in order to improve the
+// numerical accuracy by both reducing opportunities for 
+// round-off error and increasing the amount of precision
+// that can be allocated in other places.
+// (it conveniently eliminates 3 multiplies too)
+//
+// This function implements the transposed direct-form 2,
+// using 16-bit fixed-point math.  Integer types here are
+// annotated with comments of the form "/* x:y */", where
+// x is the number of significant bits in the value and y
+// is the (negated) base-2 exponent.
+// 
+// The inspiration for the filter (and identification of basic
+// parameters and comparison with some other filters) was done
+// by Park Hays and described at [0].  Some variations and
+// prototypes of the fixed-point version are implemented at [1].
+// The specific parameters of this filter, though, are changed
+// as follows:
+// 
 // The higher sampling rate puts the nyquist frequency at
 // 50 Hz (digital butterworth filters appear to roll off
-// to -inf a bit below there), which probably doesn't make
-// that much difference visually.
+// to -inf at the nyquist rate), which probably doesn't make
+// that much difference visually but it seems to greatly help
+// the numerical properties of the fixed-point version.
 // 
 // SciPy's butterworth parameter designer seems to put the
 // cutoff frequency higher than advertised, so I pulled it
@@ -143,19 +171,12 @@ static int16_t /* 15:13 */ flicker_filter(int16_t /* 7:5 */ x) {
 // (using signal.freqz to plot response), yielding the
 // following filter.
 //
-// I also rescaled the filter so that the B vector is 1,2,1,
-// which improves the numerical accuracy by both reducing
-// opportunities for round-off error and increasing the
-// amount of precision that can be allocated in other places
-// (and conveniently eliminates 3 multiplies too)
-//
-// >>> rate=100
-// >>> cutoff = 4/(rate/2.)
-// >>> b, a = signal.butter(2, cutoff/2, 'low', analog=False)
+// [0] http://inkofpark.wordpress.com/2013/12/23/arduino-flickering-candle/
+// [1] https://github.com/mokus0/junkbox/blob/master/Haskell/Math/BiQuad.hs
 #define UPDATE_RATE             100 // Hz
 #define FILTER_NORMALIZATION    4.65e3
-static int16_t /* 15:13 */ flicker_filter(int16_t /* 7:5 */ x) {
-    const int16_t // TODO: make sure these constants are inlined
+static int16_t /* 15:13 */ flicker_filter(int8_t /* 7:5 */ x) {
+    const int8_t // TODO: make sure these constants are inlined
         /* 7:6 */ a1 = -117, // round ((-1.82269493) * (1L << 6 ))
         /* 7:7 */ a2 =  107; // round (  0.83718165  * (1L << 7 ))
         // b0 = 1, b1 = 2, b2 = 1; multiplies as shifts below
@@ -165,9 +186,9 @@ static int16_t /* 15:13 */ flicker_filter(int16_t /* 7:5 */ x) {
     
     int16_t /* 15:5 */ y;
     
-    y  = (x << 0)                        + (d1 >> 0);
-    d1 = (x << 1) - (a1 * (y >> 7) << 1) + (d2 >> 0);
-    d2 = (x << 0) - (a2 * (y >> 7) << 0);
+    y  = ((int16_t) x << 0)                        + (d1 >> 0);
+    d1 = ((int16_t) x << 1) - (a1 * (y >> 7) << 1) + (d2 >> 0);
+    d2 = ((int16_t) x << 0) - (a2 * (y >> 7) << 0);
     
     return y;
 }
