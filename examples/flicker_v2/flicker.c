@@ -143,32 +143,31 @@ static int16_t /* 15:13 */ flicker_filter(int16_t /* 7:5 */ x) {
 // (using signal.freqz to plot response), yielding the
 // following filter.
 //
-// TODO: other improvements to both performance and accuracy
-// specifically:
-//  * factor b0 out of b's and into normalization
-//  * try other forms
+// I also rescaled the filter so that the B vector is 1,2,1,
+// which improves the numerical accuracy by both reducing
+// opportunities for round-off error and increasing the
+// amount of precision that can be allocated in other places
+// (and conveniently eliminates 3 multiplies too)
 //
 // >>> rate=100
 // >>> cutoff = 4/(rate/2.)
 // >>> b, a = signal.butter(2, cutoff/2, 'low', analog=False)
 #define UPDATE_RATE             100 // Hz
-#define FILTER_NORMALIZATION    10e3
+#define FILTER_NORMALIZATION    4.65e3
 static int16_t /* 15:13 */ flicker_filter(int16_t /* 7:5 */ x) {
     const int16_t // TODO: make sure these constants are inlined
-        /* 7:6  */ a1 = -117, // round ((-1.82269493) * (1L << 6 ))
-        /* 7:7  */ a2 =  107, // round (  0.83718165  * (1L << 7 ))
-        /* 7:15 */ b0 =  119, // round (  0.00362168  * (1L << 15))
-        /* 7:14 */ b1 =  119, // round (  0.00724336  * (1L << 14))
-        /* 7:15 */ b2 =  119; // round (  0.00362168  * (1L << 15))
+        /* 7:6 */ a1 = -117, // round ((-1.82269493) * (1L << 6 ))
+        /* 7:7 */ a2 =  107; // round (  0.83718165  * (1L << 7 ))
+        // b0 = 1, b1 = 2, b2 = 1; multiplies as shifts below
     static int16_t
-        /* 15:14 */ d1 = 0,
-        /* 15:14 */ d2 = 0;
+        /* 15:5 */ d1 = 0,
+        /* 15:5 */ d2 = 0;
     
-    int16_t /* 15:14 */ y;
+    int16_t /* 15:5 */ y;
     
-    y  = ((b0 * x) >> 6)                        + (d1 >> 0);
-    d1 = ((b1 * x) >> 5) - (a1 * (y >> 8) << 2) + (d2 >> 0);
-    d2 = ((b2 * x) >> 6) - (a2 * (y >> 8) << 1);
+    y  = (x << 0)                        + (d1 >> 0);
+    d1 = (x << 1) - (a1 * (y >> 7) << 1) + (d2 >> 0);
+    d2 = (x << 0) - (a2 * (y >> 7) << 0);
     
     return y;
 }
