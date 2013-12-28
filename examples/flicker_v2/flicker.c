@@ -101,8 +101,8 @@ static int8_t normal() {
 //
 // [0] http://inkofpark.wordpress.com/2013/12/23/arduino-flickering-candle/
 // [1] https://github.com/mokus0/junkbox/blob/master/Haskell/Math/BiQuad.hs
-#define UPDATE_RATE             60 // Hz
-#define FILTER_NORMALIZATION    4.3e3
+#define UPDATE_RATE     60 // Hz
+#define FILTER_STDDEV   4.3e3
 static int16_t /* 15:13 */ flicker_filter(int16_t /* 7:5 */ x) {
     const int16_t
         /* 3:3  */ a1 = -7,  // round ((-0.87727063) * (1L << 3 ))
@@ -131,14 +131,14 @@ static int16_t /* 15:13 */ flicker_filter(int16_t /* 7:5 */ x) {
 
 // scipy-designed filter with 4Hz cutoff and 100Hz sample rate.
 // parameters set using the following little snippet:
-// >>> rate=100
-// >>> cutoff = 4/(rate/2.)
-// >>> b, a = signal.butter(2, cutoff/2, 'low')
+// >>> rate=156.25
+// >>> cutoff = 2.2/(rate/2.)
+// >>> b, a = signal.butter(2, cutoff, 'low')
 //
 // which yields:
 //
-//  b = 0.00362168,  0.00724336,  0.00362168
-//  a = 1.        , -1.82269493,  0.83718165
+//  b = 0.00184036,  0.00368073,  0.00184036
+//  a = 1.        , -1.87503716,  0.88239861
 //
 // B was then rescaled to 1, 2, 1 in order to improve the
 // numerical accuracy by both reducing opportunities for 
@@ -169,17 +169,17 @@ static int16_t /* 15:13 */ flicker_filter(int16_t /* 7:5 */ x) {
 // 
 // SciPy's butterworth parameter designer also seems to put the
 // cutoff frequency higher than advertised, so I pulled it down
-// to something that looked more like the right place (using
-// signal.freqz to plot response), yielding the following filter.
+// to something that looked pleasant when running, yielding the
+// following filter.
 //
 // [0] http://inkofpark.wordpress.com/2013/12/23/arduino-flickering-candle/
 // [1] https://github.com/mokus0/junkbox/blob/master/Haskell/Math/BiQuad.hs
-#define UPDATE_RATE             100 // Hz
-#define FILTER_NORMALIZATION    5.2e3
+#define UPDATE_RATE     156.25 // Hz
+#define FILTER_STDDEV   6.2e3
 static int16_t /* 15:13 */ flicker_filter(int8_t /* 7:5 */ x) {
     const int16_t
-        /* 9:8 */ a1 = -467, // round ((-1.82269493) * (1L << 8 ))
-        /* 8:8 */ a2 =  214; // round (  0.83718165  * (1L << 8 ))
+        /* 9:8 */ a1 = -480, // round ((-1.87503716) * (1L << 8 ))
+        /* 8:8 */ a2 =  226; // round (  0.88239861  * (1L << 8 ))
         // b0 = 1, b1 = 2, b2 = 1; multiplies as shifts below
     static int16_t
         /* 15:6 */ d1 = 0,
@@ -197,8 +197,8 @@ static int16_t /* 15:13 */ flicker_filter(int8_t /* 7:5 */ x) {
 #endif
 
 static uint8_t next_intensity() {
-    const uint8_t wind = 84, m = 255 - wind;
-    const int16_t scale = (2 * FILTER_NORMALIZATION) / wind;
+    const uint8_t m = 171, s = 2;
+    const int16_t scale = (s * FILTER_STDDEV) / (255 - m);
     
     int16_t x = m + flicker_filter(normal()) / scale;
     return x < 0 ? 0 : x > 255 ? 255 : x;
