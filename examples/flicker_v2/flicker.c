@@ -168,9 +168,12 @@ static int16_t /* 15:13 */ flicker_filter(int16_t /* 7:5 */ x) {
 // version.
 // 
 // SciPy's butterworth parameter designer also seems to put the
-// cutoff frequency higher than advertised, so I pulled it down
-// to something that looked pleasant when running, yielding the
-// following filter.
+// cutoff frequency higher than advertised (or maybe that's an
+// effect of the limited sampling rate, but PSD plots seem to
+// show the cutoff much higher than expected, and an 8Hz cutoff
+// was just far too fast-moving for my taste), so I pulled it
+// down to something that looked pleasant when running, yielding
+// the following filter.
 //
 // [0] http://inkofpark.wordpress.com/2013/12/23/arduino-flickering-candle/
 // [1] https://github.com/mokus0/junkbox/blob/master/Haskell/Math/BiQuad.hs
