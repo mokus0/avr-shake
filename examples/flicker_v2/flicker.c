@@ -102,9 +102,9 @@ static int8_t normal() {
 // [0] http://inkofpark.wordpress.com/2013/12/23/arduino-flickering-candle/
 // [1] https://github.com/mokus0/junkbox/blob/master/Haskell/Math/BiQuad.hs
 #define UPDATE_RATE             60 // Hz
-#define FILTER_NORMALIZATION    4313.0
+#define FILTER_NORMALIZATION    4.3e3
 static int16_t /* 15:13 */ flicker_filter(int16_t /* 7:5 */ x) {
-    const int16_t // TODO: make sure these constants are inlined
+    const int16_t
         /* 3:3  */ a1 = -7,  // round ((-0.87727063) * (1L << 3 ))
         /* 4:5  */ a2 = 10,  // round (  0.31106039  * (1L << 5 ))
         /* 7:10 */ b0 = 111, // round (  0.10844744  * (1L << 10))
@@ -117,8 +117,8 @@ static int16_t /* 15:13 */ flicker_filter(int16_t /* 7:5 */ x) {
     int16_t /* 15:13 */ y;
     
     // take advantage of fact that b's are all equal with the 
-    // chosen exponents (this is a general feature of digital
-    // butterworth filters, actually)
+    // chosen exponents (this is a general feature of 2nd-order 
+    // discrete-time butterworth filters, actually)
     int16_t /* 15:14 */ bx = b0 * x >> 1;
     y  = (bx >> 1)                   + (d1 >> 0);
     d1 = (bx >> 0) - (a1 * (y >> 3)) + (d2 >> 1);
@@ -176,7 +176,7 @@ static int16_t /* 15:13 */ flicker_filter(int16_t /* 7:5 */ x) {
 #define UPDATE_RATE             100 // Hz
 #define FILTER_NORMALIZATION    4.65e3
 static int16_t /* 15:13 */ flicker_filter(int8_t /* 7:5 */ x) {
-    const int8_t // TODO: make sure these constants are inlined
+    const int8_t
         /* 7:6 */ a1 = -117, // round ((-1.82269493) * (1L << 6 ))
         /* 7:7 */ a2 =  107; // round (  0.83718165  * (1L << 7 ))
         // b0 = 1, b1 = 2, b2 = 1; multiplies as shifts below
