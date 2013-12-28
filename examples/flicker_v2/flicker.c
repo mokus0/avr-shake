@@ -133,7 +133,7 @@ static int16_t /* 15:13 */ flicker_filter(int16_t /* 7:5 */ x) {
 // parameters set using the following little snippet:
 // >>> rate=100
 // >>> cutoff = 4/(rate/2.)
-// >>> b, a = signal.butter(2, cutoff/2, 'low', analog=False)
+// >>> b, a = signal.butter(2, cutoff/2, 'low')
 //
 // which yields:
 //
@@ -143,14 +143,14 @@ static int16_t /* 15:13 */ flicker_filter(int16_t /* 7:5 */ x) {
 // B was then rescaled to 1, 2, 1 in order to improve the
 // numerical accuracy by both reducing opportunities for 
 // round-off error and increasing the amount of precision
-// that can be allocated in other places.
-// (it conveniently eliminates 3 multiplies too)
+// that can be allocated in other places.  (it also
+// conveniently replaces 3 multiplies with shifts)
 //
-// This function implements the transposed direct-form 2,
-// using 16-bit fixed-point math.  Integer types here are
-// annotated with comments of the form "/* x:y */", where
-// x is the number of significant bits in the value and y
-// is the (negated) base-2 exponent.
+// This function implements the transposed direct-form 2, using
+// 16-bit fixed-point math.  Integer types here are annotated
+// with comments of the form "/* x:y */", where x is the number
+// of significant bits in the value and y is the (negated)
+// base-2 exponent.
 // 
 // The inspiration for the filter (and identification of basic
 // parameters and comparison with some other filters) was done
@@ -159,36 +159,37 @@ static int16_t /* 15:13 */ flicker_filter(int16_t /* 7:5 */ x) {
 // The specific parameters of this filter, though, are changed
 // as follows:
 // 
-// The higher sampling rate puts the nyquist frequency at
-// 50 Hz (digital butterworth filters appear to roll off
-// to -inf at the nyquist rate), which probably doesn't make
-// that much difference visually but it seems to greatly help
-// the numerical properties of the fixed-point version.
+// The higher sampling rate puts the nyquist frequency at 50 Hz
+// (digital butterworth filters appear to roll off  to -inf at
+// the nyquist rate, though the fixed-point implementation has
+// a hard noise floor due to the fixed quantum).  This probably
+// doesn't make that much difference visually but it seems to
+// greatly improve the numerical properties of the fixed-point
+// version.
 // 
-// SciPy's butterworth parameter designer seems to put the
-// cutoff frequency higher than advertised, so I pulled it
-// down to something that looked more like the right place
-// (using signal.freqz to plot response), yielding the
-// following filter.
+// SciPy's butterworth parameter designer also seems to put the
+// cutoff frequency higher than advertised, so I pulled it down
+// to something that looked more like the right place (using
+// signal.freqz to plot response), yielding the following filter.
 //
 // [0] http://inkofpark.wordpress.com/2013/12/23/arduino-flickering-candle/
 // [1] https://github.com/mokus0/junkbox/blob/master/Haskell/Math/BiQuad.hs
 #define UPDATE_RATE             100 // Hz
-#define FILTER_NORMALIZATION    4.65e3
+#define FILTER_NORMALIZATION    5.2e3
 static int16_t /* 15:13 */ flicker_filter(int8_t /* 7:5 */ x) {
-    const int8_t
-        /* 7:6 */ a1 = -117, // round ((-1.82269493) * (1L << 6 ))
-        /* 7:7 */ a2 =  107; // round (  0.83718165  * (1L << 7 ))
+    const int16_t
+        /* 9:8 */ a1 = -467, // round ((-1.82269493) * (1L << 8 ))
+        /* 8:8 */ a2 =  214; // round (  0.83718165  * (1L << 8 ))
         // b0 = 1, b1 = 2, b2 = 1; multiplies as shifts below
     static int16_t
-        /* 15:5 */ d1 = 0,
-        /* 15:5 */ d2 = 0;
+        /* 15:6 */ d1 = 0,
+        /* 15:6 */ d2 = 0;
     
-    int16_t /* 15:5 */ y;
+    int16_t /* 15:6 */ y;
     
-    y  = ((int16_t) x << 0)                        + (d1 >> 0);
-    d1 = ((int16_t) x << 1) - (a1 * (y >> 7) << 1) + (d2 >> 0);
-    d2 = ((int16_t) x << 0) - (a2 * (y >> 7) << 0);
+    y  = ((int16_t) x << 1)                           + (d1 >> 0);
+    d1 = ((int16_t) x << 2) - (a1 * (int32_t) y >> 8) + (d2 >> 0);
+    d2 = ((int16_t) x << 1) - (a2 * (int32_t) y >> 8);
     
     return y;
 }
