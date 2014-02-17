@@ -5,10 +5,10 @@ import Development.Shake
 import Development.Shake.AVR
 import Development.Shake.FilePath
 
-device          = "atxmega16a4u"
+device          = "atxmega128a4u"
 clock           = round 32e6
 
-avrdudeFlags    = ["-b", "115200", "-c", "dragon_pdi", "-p", device]
+avrdudeFlags    = ["-b", "115200", "-c", "flip2", "-p", device]
 usbPort         = "usb"
 
 cFlags = ["-Wall", "-Os", 
@@ -23,7 +23,7 @@ main = shakeArgs shakeOptions $ do
     
     phony "flash" $ do
         need ["blink.hex"]
-        avrdude avrdudeFlags "blink.hex" usbPort
+        avrdude "application" avrdudeFlags "blink.hex" usbPort
     
     "blink.elf" *> \out -> do
         srcs <- getDirectoryFiles "." ["*.c"]

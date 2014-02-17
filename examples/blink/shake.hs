@@ -23,7 +23,7 @@ main = shakeArgs shakeOptions $ do
     
     phony "flash" $ do
         need ["blink.hex"]
-        avrdude avrdudeFlags "blink.hex" usbPort
+        avrdude "flash" avrdudeFlags "blink.hex" usbPort
     
     "blink.elf" *> \out -> do
         srcs <- getDirectoryFiles "." ["*.c"]
