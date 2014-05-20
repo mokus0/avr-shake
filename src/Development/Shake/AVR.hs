@@ -7,7 +7,6 @@ module Development.Shake.AVR
     ) where
 
 import Development.Shake
-import Development.Shake.Command
 
 gccDeps cc cFlags src = do
     Stdout cppOut <- command [Traced ""] cc (cFlags ++ ["-M", "-MG", "-E", src])
