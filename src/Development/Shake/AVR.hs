@@ -3,6 +3,7 @@ module Development.Shake.AVR
     , avr_ld,       avr_ld'
     , avr_objcopy,  avr_objcopy'
     , avr_objdump,  avr_objdump'
+    , avr_size,     avr_size'
     , avrdude,      avrdude'
     ) where
 
@@ -33,6 +34,12 @@ avr_objdump' objdump src out = do
     need [src]
     Stdout lss <- command [] objdump ["-h", "-S", src]
     writeFileChanged out lss
+
+avr_size = avr_size' "avr-size"
+avr_size' avrsizeBin src = do
+    need [src]
+    Stdout lss <- command [] avrsizeBin [src]
+    putNormal lss
 
 avrdude = avrdude' "avrdude"
 avrdude' avrdudeBin mem flags hex port = do
