@@ -1,5 +1,5 @@
 name:                   avr-shake
-version:                0.0.0.3
+version:                0.0.0.4
 stability:              experimental
 
 cabal-version:          >= 1.6
@@ -23,4 +23,4 @@ Library
   hs-source-dirs:       src
   exposed-modules:      Development.Shake.AVR
   build-depends:        base >= 3 && <5,
-                        shake >= 0.10 && < 0.12
+                        shake >= 0.10 && < 0.14
