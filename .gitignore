@@ -2,6 +2,8 @@
 *.elf
 *.hex
 *.bin
+*.map
+asf
 
 ##############
 # Global/OSX #
