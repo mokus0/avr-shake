@@ -15,23 +15,15 @@ cFlags = ["-Wall", "-Os",
     "-mmcu=" ++ device]
 
 main = shakeArgs shakeOptions $ do
-    want ["blink.hex"]
+    want ["blink.elf"]
     
-    phony "clean" $ do
-        removeFilesAfter "." ["*.o", "*.elf", "*.hex"]
-    
-    phony "flash" $ do
-        avrdude device avrdudeFlags (w Application "blink.hex")
+    "clean" ~> removeFilesAfter "." ["*.o", "*.elf"]
+    "flash" ~> avrdude device avrdudeFlags (w Application "blink.elf")
     
     "blink.elf" *> \out -> do
         srcs <- getDirectoryFiles "." ["*.c"]
-        let objs = [src `replaceExtension` "o" | src <- srcs]
+        let objs = map (<.> "o") srcs
         avr_ld' "avr-gcc" cFlags objs out
     
-    "*.hex" *> \out -> do
-        let elf = out `replaceExtension` "elf"
-        avr_objcopy "ihex" ["-j", ".text", "-j", ".data"] elf out
-    
     "*.o" *> \out -> do
-        let src = out `replaceExtension` "c"
-        avr_gcc cFlags src out
+        avr_gcc cFlags (dropExtension out) out

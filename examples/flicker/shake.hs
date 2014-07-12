@@ -17,12 +17,8 @@ cFlags = ["-Wall", "-Os",
 main = shakeArgs shakeOptions $ do
     want ["flicker.hex"]
     
-    phony "clean" $ do
-        removeFilesAfter "." ["*.o", "*.elf", "*.hex"]
-    
-    phony "flash" $ do
-        need ["flicker.hex"]
-        avrdude device avrdudeFlags (w Flash "flicker.hex")
+    "clean" ~> removeFilesAfter "." ["*.o", "*.elf", "*.hex"]
+    "flash" ~> avrdude device avrdudeFlags (w Flash "flicker.hex")
     
     "flicker.elf" *> \out -> do
         srcs <- getDirectoryFiles "." ["*.c"]

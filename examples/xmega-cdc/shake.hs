@@ -78,9 +78,9 @@ asfSources =
 compileRules fromDir toDir = 
     toDir ++ "//*.o" *> \out -> do
         src <- case stripPrefix toDir (dropExtension out) of
-            Just rest | take 1 rest == "/"  -> return (fromDir </> drop 1 rest)
-            Nothing -> fail $ unwords
-                ["ASF sources build rule matched", show out,
+            Just ('/':rest) -> return (fromDir </> rest)
+            _               -> fail $ unwords
+                ["Build rule matched", show out,
                 "which does not start with", show toDir]
         
         case takeExtension src of
