@@ -9,7 +9,6 @@ device  = "attiny13"
 clock   = round 9.6e6
 
 avrdudeFlags    = ["-b", "115200", "-c", "dragon_isp", "-p", device]
-usbPort         = "usb"
 
 cFlags = ["-Wall", "-Os",
     "-DF_CPU=" ++ show clock ++ "UL",
@@ -23,7 +22,7 @@ main = shakeArgs shakeOptions $ do
     
     phony "flash" $ do
         need ["flicker.hex"]
-        avrdude "flash" avrdudeFlags "flicker.hex" usbPort
+        avrdude "flash" avrdudeFlags "flicker.hex"
     
     "flicker.elf" *> \out -> do
         srcs <- getDirectoryFiles "." ["*.c"]

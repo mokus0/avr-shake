@@ -10,24 +10,24 @@ module Development.Shake.AVR
 import Development.Shake
 
 gccDeps cc cFlags src = do
-    Stdout cppOut <- command [Traced ""] cc (cFlags ++ ["-M", "-MG", "-E", src])
+    Stdout cppOut <- command [] cc (cFlags ++ ["-M", "-MG", "-E", src])
     return (filter (/= "\\") (drop 2 (words cppOut)))
 
 avr_gcc = avr_gcc' "avr-gcc"
 avr_gcc' cc cFlags src out = do
     need [src]
     need =<< gccDeps cc cFlags src
-    system' cc (cFlags ++ ["-c", src, "-o", out])
+    command_ [] cc (cFlags ++ ["-c", src, "-o", out])
 
 avr_ld = avr_ld' "avr-ld"
 avr_ld' ld ldFlags objs out = do
     need objs
-    system' ld (ldFlags ++ ["-o", out] ++ objs)
+    command_ [] ld (ldFlags ++ ["-o", out] ++ objs)
 
 avr_objcopy = avr_objcopy' "avr-objcopy"
 avr_objcopy' objcopy fmt flags src out = do
     need [src]
-    system' objcopy (flags ++ ["-O", fmt, src, out])
+    command_ [] objcopy (flags ++ ["-O", fmt, src, out])
 
 avr_objdump = avr_objdump' "avr-objdump"
 avr_objdump' objdump src out = do
@@ -42,7 +42,7 @@ avr_size' avrsizeBin src = do
     putNormal lss
 
 avrdude = avrdude' "avrdude"
-avrdude' avrdudeBin mem flags hex port = do
+avrdude' avrdudeBin mem flags hex = do
     alwaysRerun
     need [hex]
-    system' avrdudeBin (flags ++ ["-P", port, "-U" ++ mem ++ ":w:" ++ hex])
+    command_ [] avrdudeBin (flags ++ ["-U" ++ mem ++ ":w:" ++ hex])
