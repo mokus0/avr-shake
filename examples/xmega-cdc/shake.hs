@@ -20,7 +20,7 @@ mapFile         = "cdc.map"
 
 device          = "atxmega128a4u"
 
-avrdudeFlags    = ["-c", "dragon_pdi", "-p", device]
+avrdudeFlags    = ["-c", "dragon_pdi"]
 
 commonFlags     = ["-pipe", "-mmcu=" ++ device]
 
@@ -72,6 +72,9 @@ asfSources =
     , "xmega/drivers/usb/usb_device.c"
     ]
 
+-- defines rules to compile from a source dir to a build dir, mirroring
+-- the directory layout, appending '.o' to all source names, and
+-- invoking known compilers as needed.
 compileRules fromDir toDir = 
     toDir ++ "//*.o" *> \out -> do
         src <- case stripPrefix toDir (dropExtension out) of
@@ -88,10 +91,16 @@ compileRules fromDir toDir =
 main = shakeArgs shakeOptions $ do
     want ["size"]
     
+    "size"      ~> avr_size elfFile
     "clean"     ~> removeFilesAfter "." [elfFile, mapFile, buildRoot]
     "veryclean" ~> do need ["clean"]; removeFilesAfter "." [asfDir]
-    "flash"     ~> avrdude "application" avrdudeFlags elfFile
-    "size"      ~> avr_size elfFile
+    "flash"     ~> avrdude device avrdudeFlags (w Application elfFile)
+            
+    "fuses"     ~> do
+        avrdude device avrdudeFlags $ sequence_
+            [ w (FuseN n) elfFile
+            | n <- [1,2,4,5]
+            ]
     
     asfDir *> \out -> do
         exists <- doesDirectoryExist out

@@ -8,7 +8,7 @@ import Development.Shake.FilePath
 device          = "atxmega128a4u"
 clock           = round 32e6
 
-avrdudeFlags    = ["-c", "flip2", "-p", device]
+avrdudeFlags    = ["-c", "flip2"]
 
 cFlags = ["-Wall", "-Os", 
     "-DF_CPU=" ++ show clock ++ "UL",
@@ -21,8 +21,7 @@ main = shakeArgs shakeOptions $ do
         removeFilesAfter "." ["*.o", "*.elf", "*.hex"]
     
     phony "flash" $ do
-        need ["blink.hex"]
-        avrdude "application" avrdudeFlags "blink.hex"
+        avrdude device avrdudeFlags (w Application "blink.hex")
     
     "blink.elf" *> \out -> do
         srcs <- getDirectoryFiles "." ["*.c"]

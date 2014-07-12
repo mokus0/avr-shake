@@ -8,7 +8,7 @@ import Development.Shake.FilePath
 device  = "attiny13"
 clock   = round 9.6e6
 
-avrdudeFlags    = ["-b", "115200", "-c", "dragon_isp", "-p", device]
+avrdudeFlags    = ["-c", "dragon_isp"]
 
 cFlags = ["-Wall", "-Os",
     "-DF_CPU=" ++ show clock ++ "UL",
@@ -22,7 +22,7 @@ main = shakeArgs shakeOptions $ do
     
     phony "flash" $ do
         need ["flicker.hex"]
-        avrdude "flash" avrdudeFlags "flicker.hex"
+        avrdude device avrdudeFlags (w Flash "flicker.hex")
     
     "flicker.elf" *> \out -> do
         srcs <- getDirectoryFiles "." ["*.c"]

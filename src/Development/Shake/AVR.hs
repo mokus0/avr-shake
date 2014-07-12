@@ -4,10 +4,19 @@ module Development.Shake.AVR
     , avr_objcopy,  avr_objcopy'
     , avr_objdump,  avr_objdump'
     , avr_size,     avr_size'
+    
     , avrdude,      avrdude'
+    , AVRDUDE.MemType(..)
+    , AVRDUDE.Op(..)
+    , AVRDUDE.Format(..)
+    , AVRDUDE.ActionsM
+    , AVRDUDE.Actions
+    , AVRDUDE.action
+    , AVRDUDE.r, AVRDUDE.v, AVRDUDE.w, AVRDUDE.imm
     ) where
 
 import Development.Shake
+import qualified System.Command.AVRDUDE as AVRDUDE
 
 gccDeps cc cFlags src = do
     Stdout cppOut <- command [] cc (cFlags ++ ["-M", "-MG", "-E", src])
@@ -42,7 +51,7 @@ avr_size' avrsizeBin src = do
     putNormal lss
 
 avrdude = avrdude' "avrdude"
-avrdude' avrdudeBin mem flags hex = do
+avrdude' avrdudeBin mcu opts actions = do
     alwaysRerun
-    need [hex]
-    command_ [] avrdudeBin (flags ++ ["-U" ++ mem ++ ":w:" ++ hex])
+    need (fst (AVRDUDE.actionFiles actions))
+    command_ [] avrdudeBin (["-p", mcu] ++ opts ++ AVRDUDE.encodeActions actions)
