@@ -19,7 +19,7 @@ import Development.Shake
 import qualified System.Command.AVRDUDE as AVRDUDE
 
 gccDeps cc cFlags src = do
-    Stdout cppOut <- command [] cc (cFlags ++ ["-M", "-MG", "-E", src])
+    Stdout cppOut <- command [Traced ""] cc (cFlags ++ ["-M", "-MG", "-E", src])
     return (filter (/= "\\") (drop 2 (words cppOut)))
 
 avr_gcc = avr_gcc' "avr-gcc"
