@@ -22,11 +22,12 @@ device          = "atxmega128a4u"
 
 avrdudeFlags    = ["-c", "dragon_pdi"]
 
-commonFlags     = ["-pipe", "-mmcu=" ++ device]
+commonFlags     = ["-pipe", "-mmcu=" ++ device] ++ optFlags
+optFlags        = ["-Os", "-ffunction-sections", "-fdata-sections"]
 
 cppFlags        = ["-Iconf", "-Isrc"] ++ asfDefines ++ map (("-I" ++) . (asfDir </>)) asfIncludes
 
-cFlags = commonFlags ++ cppFlags ++ ["-Wall", "-Werror", "-Os", "-mrelax", "-std=gnu99"]
+cFlags = commonFlags ++ cppFlags ++ ["-Wall", "-Werror", "-mrelax", "-std=gnu99"]
 
 asFlags = commonFlags ++ cppFlags
     ++ ["-x", "assembler-with-cpp", "-mrelax", "-D__ASSEMBLY__"]
