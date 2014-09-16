@@ -7,6 +7,7 @@ module Development.Shake.AVR
     
     , avrdude,      avrdude'
     , AVRDUDE.MemType(..)
+    , AVRDUDE.Dir(..)
     , AVRDUDE.Op(..)
     , AVRDUDE.Format(..)
     , AVRDUDE.ActionsM

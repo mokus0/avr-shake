@@ -4,6 +4,7 @@
 {-# LANGUAGE TypeOperators #-}
 module System.Command.AVRDUDE
     ( MemType(..)
+    , Dir(..)
     , Op(..)
     , Format(..)
     , ActionsM
