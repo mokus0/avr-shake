@@ -27,4 +27,4 @@ Library
                         dependent-sum,
                         mtl,
                         process,
-                        shake >= 0.10 && < 0.14
+                        shake >= 0.10 && < 0.15
