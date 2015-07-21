@@ -23,11 +23,12 @@ elfFile         = "hid.elf"
 mapFile         = "hid.map"
 
 commonFlags     = ["-pipe"] ++ optFlags
-optFlags        = ["-Os", "-ffunction-sections", "-fdata-sections", "-fno-strict-aliasing"]
+optFlags        = ["-O1", "-ffunction-sections", "-fdata-sections", "-fno-strict-aliasing"]
 
-cppFlags        = ["-Iconf", "-Isrc"] ++ asfDefines ++ map (("-I" ++) . (asfDir </>)) asfIncludes
+cppFlags        = asfDefines ++ map (("-I" ++) . (asfDir </>)) asfIncludes
 
-cFlags = commonFlags ++ cppFlags ++ ["-Wall", "-Werror", "-std=gnu99", "-mcpu=cortex-m0", "-mthumb"]
+cFlags = commonFlags ++ cppFlags ++ ["-Wall", "-Werror", "-std=gnu99", "-mcpu=cortex-m0plus", "-mthumb"]
+    ++ ["--param", "max-inline-insns-single=500"]
 
 asFlags = commonFlags ++ cppFlags
     ++ ["-x", "assembler-with-cpp", "-mrelax", "-D__ASSEMBLY__"]
@@ -37,12 +38,20 @@ ldFlags = commonFlags ++ ["-Wl,--relax", "-Wl,--gc-sections", "-Wl,--section-sta
     ++ ["-Wl,-Map=" ++ mapFile ++ ",--cref"]
     ++ ["-Wl,--entry=Reset_Handler"]
     ++ ["-Wl,--cref"]
+    ++ ["-Wl,--script=asf/sam0/utils/linker_scripts/samd11/gcc/samd11d14am_flash.ld"]
+    ++ ["-Wl,--defsym,STACK_SIZE=0x600"]
+    ++ ["-Wl,--defsym,__stack_size__=0x600"]
+    ++ ["--specs=nano.specs"]
 
 asfDefines =
     [ "-DBOARD=SAMD11_XPLAINED_PRO"
-    , "-D__SAMD11D14AM__"
-    , "-DEXTINT_CALLBACK_MODE=true"
     , "-Dprintf=iprintf"
+    , "-DARM_MATH_CM0PLUS=true"
+    , "-DBOARD=SAMD11_XPLAINED_PRO"
+    , "-DEXTINT_CALLBACK_MODE=true"
+    , "-DUDD_ENABLE"
+    , "-DUSB_DEVICE_LPM_SUPPORT"
+    , "-D__SAMD11D14AM__"
     ]
 
 asfIncludes =
@@ -52,6 +61,9 @@ asfIncludes =
     , "common/services/usb/class/hid"
     , "common/services/usb/class/hid/device"
     , "common/services/usb/class/hid/device/generic"
+    , "common/services/usb/class/hid/device/generic/example"
+    , "common/services/usb/class/hid/device/generic/example/samd11d14a_samd11_xplained_pro"
+    , "common/services/usb/class/hid/device/generic/example/samd11d14a_samd11_xplained_pro/gcc"
     , "common/services/usb/udc"
     , "common/utils"
     , "sam0/boards"
@@ -68,7 +80,6 @@ asfIncludes =
     , "sam0/drivers/usb"
     , "sam0/drivers/usb/stack_interface"
     , "sam0/utils"
-    , "sam0/utils/cmsis/samd11/source"
     , "sam0/utils/cmsis/samd11/include"
     , "sam0/utils/header_files"
     , "sam0/utils/preprocessor"
@@ -77,6 +88,7 @@ asfIncludes =
 
 asfSources = 
     [ "common/services/sleepmgr/samd/sleepmgr.c"
+    , "common/services/usb/class/hid/device/generic/example/main.c"
     , "common/services/usb/class/hid/device/generic/example/samd11d14a_samd11_xplained_pro/ui.c"
     , "common/services/usb/class/hid/device/generic/udi_hid_generic.c"
     , "common/services/usb/class/hid/device/generic/udi_hid_generic_desc.c"
@@ -92,6 +104,8 @@ asfSources =
     , "sam0/drivers/usb/stack_interface/usb_device_udd.c"
     , "sam0/drivers/usb/stack_interface/usb_dual.c"
     , "sam0/drivers/usb/usb_sam_d_r/usb.c"
+    , "sam0/utils/cmsis/samd11/source/system_samd11.c"
+    , "sam0/utils/cmsis/samd11/source/gcc/startup_samd11.c"
     , "sam0/utils/syscalls/gcc/syscalls.c"
     ]
 
@@ -114,7 +128,7 @@ compileRules fromDir toDir =
 main = shakeArgs shakeOptions $ do
     want ["size"]
     
-    "size"      ~> avr_size elfFile
+    "size"      ~> avr_size' "arm-none-eabi-size" elfFile
     "clean"     ~> removeFilesAfter "." [elfFile, mapFile, buildRoot]
     
     -- asfDir *> \out -> do
@@ -123,11 +137,9 @@ main = shakeArgs shakeOptions $ do
     
     [elfFile, mapFile] &*> \_ -> do
         need [asfDir]
-        localSources <- getDirectoryFiles srcDir ["//*.c"]
-        let localObjs = [localBuildDir </> src <.> "o" | src <- localSources]
-            asfObjs   = [asfBuildDir   </> src <.> "o" | src <- asfSources]
+        let asfObjs   = [asfBuildDir   </> src <.> "o" | src <- asfSources]
             cmsisLib  = ["asf/thirdparty/CMSIS/Lib/GCC/libarm_cortexM0l_math.a"]
-        avr_ld' "arm-none-eabi-gcc" ldFlags (localObjs ++ asfObjs ++ cmsisLib) elfFile
+        avr_ld' "arm-none-eabi-gcc" ldFlags (asfObjs ++ cmsisLib) elfFile
     
     compileRules asfDir asfBuildDir
     compileRules srcDir localBuildDir
