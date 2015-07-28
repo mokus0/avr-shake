@@ -27,8 +27,10 @@ optFlags        = ["-O1", "-ffunction-sections", "-fdata-sections", "-fno-strict
 
 cppFlags        = asfDefines ++ map (("-I" ++) . (asfDir </>)) asfIncludes
 
-cFlags = commonFlags ++ cppFlags ++ ["-Wall", "-Werror", "-std=gnu99", "-mcpu=cortex-m0plus", "-mthumb"]
+cFlags = commonFlags ++ cppFlags ++ ["-Wall", "-Werror", "-std=gnu99"]
+    ++ ["-mcpu=cortex-m0plus", "-mthumb"]
     ++ ["--param", "max-inline-insns-single=500"]
+    ++ ["-gdwarf-2"]
 
 asFlags = commonFlags ++ cppFlags
     ++ ["-x", "assembler-with-cpp", "-mrelax", "-D__ASSEMBLY__"]
@@ -130,6 +132,7 @@ main = shakeArgs shakeOptions $ do
     
     "size"      ~> avr_size' "arm-none-eabi-size" elfFile
     "clean"     ~> removeFilesAfter "." [elfFile, mapFile, buildRoot]
+    "flash"     ~> command_ [] "openocd" ["-f", "flash.cfg"]
     
     -- asfDir *> \out -> do
     --     exists <- doesDirectoryExist out
