@@ -14,6 +14,12 @@ category:               Development
 synopsis:               AVR Crosspack actions for shake build systems.
 description:            AVR Crosspack actions for shake build systems.
 
+tested-with:            GHC == 7.4.2,
+                        GHC == 7.6.3,
+                        GHC == 7.8.4,
+                        GHC == 7.10.1,
+                        GHC == 7.11
+
 source-repository head
   type: git
   location: git://github.com/mokus0/avr-shake.git
