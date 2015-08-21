@@ -20,7 +20,6 @@ import Control.Applicative
 import Control.Monad.Writer
 import Data.GADT.Compare
 import Data.List
-import Data.Monoid
 import Data.Word
 import System.Exit
 import System.Process
